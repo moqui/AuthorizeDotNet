@@ -15,19 +15,19 @@ along with this software (see the LICENSE.md file). If not, see
 <entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
           xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.0.xsd">
 
-    <extend-entity entity-name="Party" package-name="mantle.party">
+    <extend-entity entity-name="Party" package="mantle.party">
         <field name="authorizeNetCimId" type="id"/>
     </extend-entity>
-    <extend-entity entity-name="PaymentMethod" package-name="mantle.account.method">
+    <extend-entity entity-name="PaymentMethod" package="mantle.account.method">
         <field name="authorizeNetCimId" type="id"/>
     </extend-entity>
     <!-- may support this at some point in the future for shipping addresses:
-    <extend-entity entity-name="ContactMech" package-name="mantle.party.contact">
+    <extend-entity entity-name="ContactMech" package="mantle.party.contact">
         <field name="authorizeNetCimId" type="id"/>
     </extend-entity>
     -->
 
-    <entity entity-name="PaymentGatewayAuthorizeNet" package-name="AuthorizeDotNet">
+    <entity entity-name="PaymentGatewayAuthorizeNet" package="AuthorizeDotNet">
         <field name="paymentGatewayConfigId" type="id" is-pk="true"/>
 
         <field name="transactionUrl" type="text-medium"><description>Transaction URL</description></field>
@@ -57,7 +57,7 @@ along with this software (see the LICENSE.md file). If not, see
         <field name="validationMode" type="text-short">
             <description>Validation Mode for CIM requests. Can be none, testMode, or liveMode.</description></field>
 
-        <relationship type="one" related-entity-name="mantle.account.method.PaymentGatewayConfig"/>
+        <relationship type="one" related="mantle.account.method.PaymentGatewayConfig"/>
         <seed-data>
             <moqui.basic.Enumeration description="Authorize.Net Gateway" enumId="PgtAuthorizeDotNet" enumTypeId="PaymentGatewayType"/>
         </seed-data>
