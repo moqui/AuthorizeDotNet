@@ -181,7 +181,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
-            <set field="responseString" from="org.moqui.impl.StupidWebUtilities.simpleHttpMapRequest(pgan.transactionUrl, requestMap)"/>
+            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpMapRequest(pgan.transactionUrl, requestMap)"/>
 
             <if condition="!responseString">
                 <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>

@@ -58,7 +58,7 @@ along with this software (see the LICENSE.md file). If not, see
             """]]></script>
 
             <!-- <log level="info" message="========== CimPaymentServices.authorize#Payment requestString: \n${requestString}"/> -->
-            <set field="responseString" from="org.moqui.impl.StupidWebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
+            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
             <log level="info" message="CimPaymentServices.authorize#Payment responseString: \n${responseString}"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
 
@@ -111,7 +111,7 @@ along with this software (see the LICENSE.md file). If not, see
             """]]></script>
 
             <!-- <log level="info" message="========== CimPaymentServices.capture#Payment requestString: \n${requestString}"/> -->
-            <set field="responseString" from="org.moqui.impl.StupidWebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
+            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
             <log level="info" message="CimPaymentServices.capture#Payment responseString: \n${responseString}"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
 
@@ -171,7 +171,7 @@ along with this software (see the LICENSE.md file). If not, see
 </createCustomerProfileTransactionRequest>
             """]]></script>
 
-            <set field="responseString" from="org.moqui.impl.StupidWebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
+            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
             <if condition="responseNode.directResponse">
                 <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" out-map="context"
@@ -219,7 +219,7 @@ along with this software (see the LICENSE.md file). If not, see
 </createCustomerProfileTransactionRequest>
             """]]></script>
 
-            <set field="responseString" from="org.moqui.impl.StupidWebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
+            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
             <if condition="responseNode.directResponse">
                 <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" out-map="context"
@@ -270,7 +270,7 @@ along with this software (see the LICENSE.md file). If not, see
 </createCustomerProfileTransactionRequest>
             """]]></script>
 
-            <set field="responseString" from="org.moqui.impl.StupidWebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
+            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
             <if condition="responseNode.directResponse">
                 <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" out-map="context"
