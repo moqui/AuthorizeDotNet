@@ -27,57 +27,57 @@ along with this software (see the LICENSE.md file). If not, see
 
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
 
-            <set field="postalAddress" from="paymentMethod.'mantle.party.contact.PostalAddress'"/>
+            <set field="postalAddress" from="paymentMethod.postalAddress"/>
             <if condition="!postalAddress"><return error="true" message="Cannot not process payment [${paymentId}], no Address associated with Credit Card [${paymentId}]."/></if>
-            <set field="telecomNumber" from="paymentMethod.'mantle.party.contact.TelecomNumber'"/>
+            <set field="stateProvinceGeo" from="postalAddress.stateProvinceGeo"/>
+            <set field="telecomNumber" from="paymentMethod.telecomNumber"/>
             <set field="phone" from="(telecomNumber?.countryCode ? (telecomNumber.countryCode + '-') : '') + (telecomNumber?.areaCode ? (telecomNumber.areaCode + '-') : '') + telecomNumber?.contactNumber"/>
             <set field="emailContactMech" from="paymentMethod.'Email#mantle.party.contact.ContactMech'"/>
 
-            <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId', null)"/>
+            <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/>
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
             <!-- TODO: does expire date have to be yyyy-MM? we are defaulting to MM/yyyy -->
             <set field="expireMonth" from="creditCard.expireDate ? creditCard.expireDate.substring(0, creditCard.expireDate.indexOf('/')) : null"/>
             <set field="expireYear" from="creditCard.expireDate ? creditCard.expireDate.substring(creditCard.expireDate.indexOf('/')+1) : null"/>
             <set field="expireDateFormatted" value="${expireYear}-${expireMonth}"/>
-            <if condition="paymentMethod.authorizeNetCimId">
+            <if condition="paymentMethod.gatewayCimId"><then>
                 <!-- have a payment profile, call updateCustomerPaymentProfileRequest -->
                 <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <updateCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
-    <customerProfileId>${party.authorizeNetCimId}</customerProfileId>
+    <customerProfileId>${party.gatewayCimId}</customerProfileId>
     <paymentProfile>
         <customerType>${party.partyTypeEnumId == 'PtyPerson' ? 'individual' : 'business'}</customerType>
         <billTo>
             <firstName>${paymentMethod.firstNameOnAccount ?: ''}</firstName><lastName>${paymentMethod.lastNameOnAccount ?: ''}</lastName>
             <company>${paymentMethod.companyNameOnAccount ?: ''}</company>
             <address>${postalAddress.address1}</address><city>${postalAddress.city}</city>
-            <state>${postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}</zip>
+            <state>${stateProvinceGeo?.geoCodeAlpha2 ?: stateProvinceGeo?.geoCodeAlpha3 ?: postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}${postalAddress.postalCodeExt ? '-' + postalAddress.postalCodeExt : ''}</zip>
             <country>${postalAddress.countryGeoId}</country>
             <phoneNumber>${phone ?: ''}</phoneNumber>
         </billTo>
         <payment><creditCard><cardNumber>${creditCard.cardNumber}</cardNumber>
             <expirationDate>${expireDateFormatted}</expirationDate>
             ${creditCard.cardSecurityCode ? ('<cardCode>' + creditCard.cardSecurityCode + '</cardCode>') : ''}</creditCard></payment>
-        <customerPaymentProfileId>${paymentMethod.authorizeNetCimId}</customerPaymentProfileId>
+        <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
     </paymentProfile>
     <validationMode>${pgan.validationMode}</validationMode>
 </updateCustomerPaymentProfileRequest>
                 """]]></script>
-
-                <else-if condition="party.authorizeNetCimId">
+            </then><else-if condition="party.gatewayCimId">
                     <!-- no payment profile but we have a customer profile, call createCustomerPaymentProfileRequest -->
                     <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <createCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
-    <customerProfileId>${party.authorizeNetCimId}</customerProfileId>
+    <customerProfileId>${party.gatewayCimId}</customerProfileId>
     <paymentProfile>
         <customerType>${party.partyTypeEnumId == 'PtyPerson' ? 'individual' : 'business'}</customerType>
         <billTo>
             <firstName>${paymentMethod.firstNameOnAccount ?: ''}</firstName><lastName>${paymentMethod.lastNameOnAccount ?: ''}</lastName>
             <company>${paymentMethod.companyNameOnAccount ?: ''}</company>
             <address>${postalAddress.address1}</address><city>${postalAddress.city}</city>
-            <state>${postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}</zip>
+            <state>${stateProvinceGeo?.geoCodeAlpha2 ?: stateProvinceGeo?.geoCodeAlpha3 ?: postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}${postalAddress.postalCodeExt ? '-' + postalAddress.postalCodeExt : ''}</zip>
             <country>${postalAddress.countryGeoId}</country>
             <phoneNumber>${phone ?: ''}</phoneNumber>
         </billTo>
@@ -88,10 +88,9 @@ along with this software (see the LICENSE.md file). If not, see
     <validationMode>${pgan.validationMode}</validationMode>
 </createCustomerPaymentProfileRequest>
                     """]]></script>
-                </else-if>
-                <else>
-                    <!-- no customer or payment profile, call createCustomerProfileRequest -->
-                    <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
+            </else-if><else>
+                <!-- no customer or payment profile, call createCustomerProfileRequest -->
+                <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <createCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
     <profile>
@@ -103,7 +102,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <firstName>${paymentMethod.firstNameOnAccount}</firstName><lastName>${paymentMethod.lastNameOnAccount}</lastName>
                 <company>${paymentMethod.companyNameOnAccount ?: ''}</company>
                 <address>${postalAddress.address1}</address><city>${postalAddress.city}</city>
-                <state>${postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}</zip>
+                <state>${stateProvinceGeo?.geoCodeAlpha2 ?: stateProvinceGeo?.geoCodeAlpha3 ?: postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}${postalAddress.postalCodeExt ? '-' + postalAddress.postalCodeExt : ''}</zip>
                 <country>${postalAddress.countryGeoId}</country>
                 <phoneNumber>${phone ?: ''}</phoneNumber>
             </billTo>
@@ -114,11 +113,11 @@ along with this software (see the LICENSE.md file). If not, see
      </profile>
     <validationMode>${pgan.validationMode}</validationMode>
 </createCustomerProfileRequest>
-                    """]]></script>
-                </else>
-            </if>
+                """]]></script>
+            </else></if>
 
-            <!-- <log level="info" message="========== store#CustomerPaymentMethod requestString: \n${requestString}"/> -->
+            <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! will contain sensitive information: -->
+            <log level="info" message="========== store#CustomerPaymentMethod requestString: \n${requestString}"/>
             <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
             <log level="info" message="store#CustomerPaymentMethod responseString: \n${responseString}"/>
 
@@ -140,20 +139,20 @@ along with this software (see the LICENSE.md file). If not, see
                 <return error="true" message="Could not save payment method [${paymentMethodId}] information: ${responseNode.messages.message?.getAt(0)?.text?.text()}"/>
             </if>
 
-            <!-- set the authorizeNetCimId values for Party and PaymentMethod as needed -->
-            <if condition="paymentMethod.authorizeNetCimId">
+            <!-- set the gatewayCimId values for Party and PaymentMethod as needed -->
+            <if condition="paymentMethod.gatewayCimId">
                 <!-- have a payment profile, called updateCustomerPaymentProfileRequest -->
 
-                <else-if condition="party.authorizeNetCimId">
+                <else-if condition="party.gatewayCimId">
                     <!-- no payment profile but we have a customer profile, called createCustomerPaymentProfileRequest -->
-                    <set field="paymentMethod.authorizeNetCimId" from="responseNode.customerPaymentProfileId.text()"/>
+                    <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileId.text()"/>
                     <entity-update value-field="paymentMethod"/>
                 </else-if>
                 <else>
                     <!-- no customer or payment profile, called createCustomerProfileRequest -->
-                    <set field="party.authorizeNetCimId" from="responseNode.customerProfileId.text()"/>
+                    <set field="party.gatewayCimId" from="responseNode.customerProfileId.text()"/>
                     <entity-update value-field="party"/>
-                    <set field="paymentMethod.authorizeNetCimId" from="responseNode.customerPaymentProfileIdList.numericString.text()"/>
+                    <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileIdList.numericString.text()"/>
                     <entity-update value-field="paymentMethod"/>
                 </else>
             </if>
@@ -169,19 +168,19 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="delete" noun="CustomerPaymentMethod">
         <in-parameters><parameter name="paymentMethodId"/></in-parameters>
         <actions>
-            <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId', null)"/>
+            <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/>
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
             <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
 
-            <if condition="paymentMethod.authorizeNetCimId">
+            <if condition="paymentMethod.gatewayCimId">
                 <!-- call deleteCustomerPaymentProfileRequest -->
                 <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <deleteCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
-    <customerProfileId>${party.authorizeNetCimId}</customerProfileId>
-    <customerPaymentProfileId>${paymentMethod.authorizeNetCimId}</customerPaymentProfileId>
+    <customerProfileId>${party.gatewayCimId}</customerProfileId>
+    <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
 </deleteCustomerPaymentProfileRequest>
                 """]]></script>
 

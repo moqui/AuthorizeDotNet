@@ -44,7 +44,7 @@ along with this software (see the LICENSE.md file). If not, see
     -->
 
     <!-- ========== Authorize.Net CIM Settings ========== -->
-    <!-- For API details, including configuration related values, see: http://developer.authorize.net/api/cim/ -->
+    <!-- For API details, including configuration related values, see: http://developer.authorize.net/api/reference/features/customer_profiles.html -->
 
     <mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="AuthorizeDotNetCimDemo"
             paymentGatewayTypeEnumId="PgtAuthorizeDotNet" description="Authorize.Net Demo Config"
@@ -63,7 +63,7 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- for production set transactionUrl to: https://api.authorize.net/xml/v1/request.api
         OR the new URL for the Akamai based network: https://api2.authorize.net/xml/v1/request.api -->
-    <!-- for production validationMode should be "liveMode" or for more extensive validation "testMode", see AuthorizeNet_CIM_XML_guide.pdf for details -->
+    <!-- for production validationMode should be "liveMode" or for more extensive validation "testMode", see http://developer.authorize.net/api/reference/#customer-profiles for details -->
     <AuthorizeDotNet.PaymentGatewayAuthorizeNet paymentGatewayConfigId="AuthorizeDotNetCimDemo"
             transactionUrl="https://apitest.authorize.net/xml/v1/request.api"
             login="" tranKey="" apiVersion="1" validationMode="none"/>

@@ -183,7 +183,7 @@ along with this software (see the LICENSE.md file). If not, see
 
             <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpMapRequest(pgan.transactionUrl, requestMap)"/>
 
-            <if condition="!responseString">
+            <if condition="!responseString"><then>
                 <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
                 <!-- no responseString, save an error response -->
                 <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
@@ -192,11 +192,9 @@ along with this software (see the LICENSE.md file). If not, see
                             amount:payment.amount, amountUomId:payment.amountUomId, transactionDate:ec.user.nowTimestamp,
                             resultSuccess:'N', resultDeclined:'N', resultError:'Y',
                             resultBadExpire:'N', resultBadCardNumber:'N']"/>
-
-                <else>
-                    <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" in-map="context" out-map="context"/>
-                </else>
-            </if>
+            </then><else>
+                <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" in-map="context" out-map="context"/>
+            </else></if>
         </actions>
     </service>
     <service verb="save" noun="AimResponse">

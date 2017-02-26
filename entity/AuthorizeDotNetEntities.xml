@@ -12,21 +12,7 @@ You should have received a copy of the CC0 Public Domain Dedication
 along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
-<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-          xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.0.xsd">
-
-    <extend-entity entity-name="Party" package="mantle.party">
-        <field name="authorizeNetCimId" type="id"/>
-    </extend-entity>
-    <extend-entity entity-name="PaymentMethod" package="mantle.account.method">
-        <field name="authorizeNetCimId" type="id"/>
-    </extend-entity>
-    <!-- may support this at some point in the future for shipping addresses:
-    <extend-entity entity-name="ContactMech" package="mantle.party.contact">
-        <field name="authorizeNetCimId" type="id"/>
-    </extend-entity>
-    -->
-
+<entities xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/entity-definition-2.0.xsd">
     <entity entity-name="PaymentGatewayAuthorizeNet" package="AuthorizeDotNet">
         <field name="paymentGatewayConfigId" type="id" is-pk="true"/>
 
@@ -47,12 +33,12 @@ along with this software (see the LICENSE.md file). If not, see
                 If duplicate transaction occurs in the defined time limit then return error.</description></field>
 
         <field name="testRequest" type="text-short">
-            <description>Test Request (for AIM requests)? - forces the url property to the test url and adds more logging info to the logs (TRUE|FALSE)</description></field>
+            <description>Test Request? (for AIM requests) - forces the url property to the test url and adds more logging info to the logs (TRUE|FALSE)</description></field>
 
         <field name="emailCustomer" type="text-short">
-            <description>Email Customer? - if should send an email to the customer for each transaction (TRUE|FALSE)</description></field>
+            <description>Email Customer? (for AIM requests) - if should send an email to the customer for each transaction (TRUE|FALSE)</description></field>
         <field name="emailMerchant" type="text-short">
-            <description>Email Merchant? - if should send email to the merchant for each transaction (TRUE|FALSE)</description></field>
+            <description>Email Merchant? (for AIM requests) - if should send email to the merchant for each transaction (TRUE|FALSE)</description></field>
 
         <field name="validationMode" type="text-short">
             <description>Validation Mode for CIM requests. Can be none, testMode, or liveMode.</description></field>
