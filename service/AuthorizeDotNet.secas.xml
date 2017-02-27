@@ -13,21 +13,28 @@ along with this software (see the LICENSE.md file). If not, see
 <http://creativecommons.org/publicdomain/zero/1.0/>.
 -->
 <secas xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-eca-2.0.xsd">
-    <seca service="mantle.account.PaymentMethodServices.create#CreditCard" when="tx-commit">
+    <seca service="mantle.account.PaymentMethodServices.create#CreditCard" when="post-service"><!-- run in same tx so user gets any errors -->
         <actions>
             <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
             <if condition="enabled != 'true'"><return/></if>
             <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod" in-map="context"/>
         </actions>
     </seca>
-    <seca service="mantle.account.PaymentMethodServices.update#CreditCard" when="tx-commit">
+    <seca service="mantle.account.PaymentMethodServices.update#CreditCard" when="post-service"><!-- run in same tx so user gets any errors -->
         <actions>
             <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
             <if condition="enabled != 'true'"><return/></if>
             <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod" in-map="context"/>
         </actions>
     </seca>
-    <seca service="mantle.account.PaymentMethodServices.delete#CreditCard" when="pre-service">
+    <seca service="mantle.account.PaymentMethodServices.delete#PaymentMethod" when="post-service">
+        <actions>
+            <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
+            <if condition="enabled != 'true'"><return/></if>
+            <service-call name="AuthorizeDotNet.CimServices.delete#CustomerPaymentMethod" in-map="context"/>
+        </actions>
+    </seca>
+    <seca service="mantle.account.PaymentMethodServices.expunge#PaymentMethod" when="pre-service">
         <actions>
             <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
             <if condition="enabled != 'true'"><return/></if>

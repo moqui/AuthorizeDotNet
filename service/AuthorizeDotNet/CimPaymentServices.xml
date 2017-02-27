@@ -36,7 +36,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId, paymentGatewayConfigId:paymentGatewayConfigId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
@@ -45,6 +45,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
+            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
 
             <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -87,6 +88,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
+            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
 
             <set field="paymentRefNum" from="payment.paymentRefNum"/>
             <if condition="!paymentRefNum">
@@ -128,7 +130,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- get creditCard for cardSecurityCode before CIM check as that will remove it -->
             <if condition="!cardSecurityCode">
                 <set field="creditCard" from="payment.'mantle.account.method.CreditCard'"/>
-                <set field="cardSecurityCode" from="creditCard.cardSecurityCode"/>
+                <set field="cardSecurityCode" from="creditCard?.cardSecurityCode"/>
             </if>
 
             <set field="visit" from="payment.'moqui.server.Visit'"/>
@@ -136,7 +138,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId, paymentGatewayConfigId:paymentGatewayConfigId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
@@ -145,6 +147,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
+            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
 
             <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -177,7 +180,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId, paymentGatewayConfigId:paymentGatewayConfigId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
@@ -186,9 +189,15 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
+            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
 
-            <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
-            <if condition="!paymentGatewayResponse"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
+            <set field="paymentRefNum" from="payment.paymentRefNum"/>
+            <if condition="!paymentRefNum">
+                <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
+                <if condition="!paymentGatewayResponse"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
+                <set field="paymentRefNum" from="paymentGatewayResponse.referenceNum"/>
+            </if>
+            <if condition="!paymentRefNum"><return error="true" message="Could not find authorization transaction ID (reference number) for Payment ${paymentId}"/></if>
 
             <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -196,27 +205,14 @@ along with this software (see the LICENSE.md file). If not, see
     <transaction><profileTransVoid>
         <customerProfileId>${party.gatewayCimId}</customerProfileId>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
-        <transId>${paymentGatewayResponse.referenceNum}</transId>
+        <transId>${paymentRefNum}</transId>
     </profileTransVoid></transaction>
 </createCustomerProfileTransactionRequest>
             """]]></script>
 
-            <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
-            <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
-            <if condition="responseNode.directResponse"><then>
-                <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" out-map="context"
-                        in-map="[paymentId:paymentId, paymentOperationEnumId:'PgoRelease',
-                            paymentGatewayConfigId:paymentGatewayConfigId,
-                            responseString:responseNode.directResponse[0].text(), delimeter:',']"/>
-            </then><else>
-                <!-- TODO: handle better here... -->
-                <log level="warn" message="No directResponse in authorize payment [${paymentId}], responseString: \n${responseString}"/>
-            </else></if>
-
-            <if condition="responseNode.messages"><iterate list="responseNode.messages[0].message" entry="message">
-                <if condition="'Error'.equalsIgnoreCase(responseNode.messages[0].resultCode[0]?.text())"><then><message error="true">${message.text[0]?.text()}</message></then>
-                    <else><message>${message.text[0]?.text()}</message></else></if>
-            </iterate></if>
+            <set field="paymentOperationEnumId" value="PgoRelease"/>
+            <set field="transactionUrl" from="pgan.transactionUrl"/>
+            <service-call name="AuthorizeDotNet.CimPaymentServices.send#CimRequest" in-map="context" out-map="context"/>
         </actions>
     </service>
     <service verb="refund" noun="Payment">
@@ -231,7 +227,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId, paymentGatewayConfigId:paymentGatewayConfigId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
@@ -240,6 +236,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
+            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
 
             <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
             <if condition="!paymentGatewayResponse"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
@@ -298,6 +295,7 @@ along with this software (see the LICENSE.md file). If not, see
                             responseString:responseNode.directResponse[0].text(), delimeter:',']"/>
             </then><else>
                 <log level="warn" message="No directResponse in authorize payment [${payment.paymentId}], responseString: \n${responseString}"/>
+                <if condition="reasonMessage != null &amp;&amp; reasonMessage.length() > 255"><set field="reasonMessage" from="reasonMessage.substring(0, 255)"/></if>
                 <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
                         in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:paymentOperationEnumId,
                             paymentId:payment.paymentId, paymentMethodId:payment.paymentMethodId,
