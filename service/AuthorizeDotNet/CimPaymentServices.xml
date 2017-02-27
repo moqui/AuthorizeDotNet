@@ -88,8 +88,13 @@ along with this software (see the LICENSE.md file). If not, see
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
-            <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
-            <if condition="!paymentGatewayResponse"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
+            <set field="paymentRefNum" from="payment.paymentRefNum"/>
+            <if condition="!paymentRefNum">
+                <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
+                <if condition="!paymentGatewayResponse"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
+                <set field="paymentRefNum" from="paymentGatewayResponse.referenceNum"/>
+            </if>
+            <if condition="!paymentRefNum"><return error="true" message="Could not find authorization transaction ID (reference number) for Payment ${paymentId}"/></if>
 
             <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -98,7 +103,7 @@ along with this software (see the LICENSE.md file). If not, see
         <amount>${amount ?: payment.amount}</amount>
         <customerProfileId>${party.gatewayCimId}</customerProfileId>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
-        <transId>${paymentGatewayResponse.referenceNum}</transId>
+        <transId>${paymentRefNum}</transId>
     </profileTransPriorAuthCapture></transaction>
     <extraOptions>x_currency_code=${payment.amountUomId}</extraOptions>
 </createCustomerProfileTransactionRequest>
@@ -271,8 +276,8 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="paymentGatewayResponseId"/>
         </out-parameters>
         <actions>
-            <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! will contain sensitive information: -->
-            <log level="info" message="========== CimPaymentServices ${paymentOperationEnumId} requestString: \n${requestString}"/>
+            <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! may contain sensitive information: -->
+            <!-- <log level="info" message="========== CimPaymentServices ${paymentOperationEnumId} requestString: \n${requestString}"/> -->
             <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(transactionUrl, requestString, 'text/xml')"/>
             <log level="info" message="CimPaymentServices.authorize#Payment responseString: \n${responseString}"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
