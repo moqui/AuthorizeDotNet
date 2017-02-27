@@ -36,11 +36,13 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
+            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
@@ -76,11 +78,13 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
+            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
@@ -127,11 +131,13 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
+            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
@@ -166,11 +172,13 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
+            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 
@@ -218,11 +226,13 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
                 <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod"
-                        in-map="[paymentMethodId:paymentMethod.paymentMethodId]"/>
+                        in-map="[paymentMethodId:paymentMethod.paymentMethodId, paymentId:paymentId]"/>
                 <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
+            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
 

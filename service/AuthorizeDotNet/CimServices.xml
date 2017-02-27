@@ -17,7 +17,10 @@ along with this software (see the LICENSE.md file). If not, see
     <!-- These services are based on the Authorize.Net CIM API, version 1. See: http://developer.authorize.net/api/cim/ -->
 
     <service verb="store" noun="CustomerPaymentMethod" authenticate="anonymous-all">
-        <in-parameters><parameter name="paymentMethodId"/></in-parameters>
+        <in-parameters>
+            <parameter name="paymentMethodId" required="true"/>
+            <parameter name="paymentId"/>
+        </in-parameters>
         <actions>
             <entity-find-one entity-name="mantle.account.method.CreditCard" value-field="creditCard"/>
             <!-- for now we are only supporting CreditCard, though we could also support BankAccount with Authorize.Net CIM -->
@@ -127,16 +130,28 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="responseNode.validationDirectResponseList?.string">
                 <iterate list="responseNode.validationDirectResponseList.string" entry="validationStringNode">
                     <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse"
-                            in-map="[paymentMethodId:paymentMethodId, paymentOperationEnumId:'PgoValidateAuthorize',
-                                paymentGatewayConfigId:paymentGatewayConfigId,
+                            in-map="[paymentMethodId:paymentMethodId, paymentOperationEnumId:'PgoStoreCim',
+                                paymentId:paymentId, paymentGatewayConfigId:paymentGatewayConfigId,
                                 responseString:validationStringNode.text(), delimeter:',']"/>
                 </iterate>
             </if>
 
-            <if condition="responseNode.messages.resultCode.text() != 'Ok'">
-                <!-- TODO: should probably do something else on error... but what? -->
-                <log level="error" message="Error saving Authorize.Net CIM info for PaymentMethod [${paymentMethodId}]: ${responseString}"/>
-                <return error="true" message="Could not save payment method [${paymentMethodId}] information: ${responseNode.messages.message?.getAt(0)?.text?.text()}"/>
+            <if condition="responseNode.messages">
+                <set field="responseCode" from="responseNode.messages[0].resultCode[0]?.text()"/>
+                <if condition="responseNode.messages[0].message">
+                    <set field="message" from="responseNode.messages[0].message[0]"/>
+                    <set field="reasonCode" from="message.code[0]?.text()"/>
+                    <set field="reasonMessage" from="message.text[0]?.text()"/>
+                </if>
+            </if>
+
+            <if condition="responseCode != 'Ok'">
+                <log level="warn" message="Error saving Authorize.Net CIM info for PaymentMethod [${paymentMethodId}]: ${responseString}"/>
+                <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
+                        in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:'PgoStoreCim',
+                            paymentMethodId:paymentMethodId, paymentId:paymentId, transactionDate:ec.user.nowTimestamp,
+                            responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage, resultSuccess:'N', resultError:'Y']"/>
+                <return message="Could not save CIM payment method ${paymentMethodId}, message: ${reasonMessage}"/>
             </if>
 
             <!-- set the gatewayCimId values for Party and PaymentMethod as needed -->
