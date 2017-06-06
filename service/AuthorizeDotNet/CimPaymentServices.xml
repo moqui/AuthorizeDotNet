@@ -28,7 +28,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- get creditCard for cardSecurityCode before CIM check as that will remove it -->
             <if condition="!cardSecurityCode">
                 <set field="creditCard" from="payment.'mantle.account.method.CreditCard'"/>
-                <set field="cardSecurityCode" from="creditCard.cardSecurityCode"/>
+                <set field="cardSecurityCode" from="creditCard?.cardSecurityCode"/>
             </if>
 
             <set field="visit" from="payment.'moqui.server.Visit'"/>
