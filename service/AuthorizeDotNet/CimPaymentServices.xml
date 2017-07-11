@@ -22,7 +22,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
-            <if condition="paymentMethod.paymentMethodTypeEnumId != 'PmtCreditCard'">
+            <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
                 <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
 
             <!-- get creditCard for cardSecurityCode before CIM check as that will remove it -->
@@ -73,7 +73,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
-            <if condition="paymentMethod.paymentMethodTypeEnumId != 'PmtCreditCard'">
+            <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
                 <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
 
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
@@ -124,7 +124,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
-            <if condition="paymentMethod.paymentMethodTypeEnumId != 'PmtCreditCard'">
+            <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
                 <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
 
             <!-- get creditCard for cardSecurityCode before CIM check as that will remove it -->
@@ -174,7 +174,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
-            <if condition="paymentMethod.paymentMethodTypeEnumId != 'PmtCreditCard'">
+            <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
                 <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
 
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
@@ -221,7 +221,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
-            <if condition="paymentMethod.paymentMethodTypeEnumId != 'PmtCreditCard'">
+            <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
                 <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
 
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
