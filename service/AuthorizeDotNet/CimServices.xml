@@ -39,7 +39,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
 
             <set field="postalAddress" from="paymentMethod.postalAddress"/>
-            <if condition="!postalAddress"><return error="true" message="Cannot not process payment [${paymentId}], no Address associated with Credit Card [${paymentId}]."/></if>
+            <if condition="!postalAddress"><return message="No address associated with credit card ${paymentMethodId}, not saving CIM record."/></if>
             <set field="stateProvinceGeo" from="postalAddress.stateProvinceGeo"/>
             <set field="telecomNumber" from="paymentMethod.telecomNumber"/>
             <set field="phone" from="(telecomNumber?.countryCode ? (telecomNumber.countryCode + '-') : '') + (telecomNumber?.areaCode ? (telecomNumber.areaCode + '-') : '') + telecomNumber?.contactNumber"/>
