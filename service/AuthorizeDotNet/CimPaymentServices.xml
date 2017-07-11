@@ -23,7 +23,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
-                <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
+                <return error="true" message="Cannot authorize payment ${paymentId}, not a Credit Card payment."/></if>
 
             <!-- get creditCard for cardSecurityCode before CIM check as that will remove it -->
             <if condition="!cardSecurityCode">
@@ -74,7 +74,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
-                <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
+                <return error="true" message="Cannot capture payment ${paymentId}, not a Credit Card payment."/></if>
 
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
@@ -125,7 +125,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
-                <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
+                <return error="true" message="Cannot authorize and capture payment ${paymentId}, not a Credit Card payment."/></if>
 
             <!-- get creditCard for cardSecurityCode before CIM check as that will remove it -->
             <if condition="!cardSecurityCode">
@@ -175,7 +175,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
-                <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
+                <return error="true" message="Cannot release authorization for payment ${paymentId}, not a Credit Card payment."/></if>
 
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
@@ -222,7 +222,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
             <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
             <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
-                <return error="true" message="Cannot not process payment [${paymentId}], not a Credit Card payment."/></if>
+                <return error="true" message="Cannot refund payment ${paymentId}, not a Credit Card payment."/></if>
 
             <!-- if no gatewayCimId, store the PaymentMethod on CIM -->
             <if condition="!paymentMethod.gatewayCimId">
