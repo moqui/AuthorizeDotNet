@@ -51,7 +51,7 @@ along with this software (see the LICENSE.md file). If not, see
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
     <transaction><profileTransAuthOnly>
-        <amount>${payment.amount}</amount>
+        <amount>${toPlainString(payment.amount)}</amount>
         <customerProfileId>${party.gatewayCimId}</customerProfileId>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
         <order><invoiceNumber>${payment.orderId}</invoiceNumber></order>
@@ -102,7 +102,7 @@ along with this software (see the LICENSE.md file). If not, see
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
     <transaction><profileTransPriorAuthCapture>
-        <amount>${amount ?: payment.amount}</amount>
+        <amount>${toPlainString(amount ?: payment.amount)}</amount>
         <customerProfileId>${party.gatewayCimId}</customerProfileId>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
         <transId>${paymentRefNum}</transId>
@@ -153,7 +153,7 @@ along with this software (see the LICENSE.md file). If not, see
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
     <transaction><profileTransAuthCapture>
-        <amount>${payment.amount}</amount>
+        <amount>${toPlainString(payment.amount)}</amount>
         <customerProfileId>${party.gatewayCimId}</customerProfileId>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
         <order><invoiceNumber>${payment.orderId}</invoiceNumber></order>
@@ -245,7 +245,7 @@ along with this software (see the LICENSE.md file). If not, see
 <createCustomerProfileTransactionRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
     <transaction><profileTransRefund>
-        <amount>${amount ?: payment.amount}</amount>
+        <amount>${toPlainString(amount ?: payment.amount)}</amount>
         <customerProfileId>${party.gatewayCimId}</customerProfileId>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
         <order><invoiceNumber>${payment.orderId}</invoiceNumber></order>

@@ -141,7 +141,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="cardTypeCode" from="creditCard.creditCardTypeEnumId?.charAt(3)"/>
             <!-- TODO, future: support x_method:'ECHECK' for BankAccount records -->
             <set field="paymentInfoMap" from="[x_method:'CC',
-                    x_amount:payment.amount, x_currency_code:payment.amountUomId,
+                    x_amount:toPlainString(payment.amount), x_currency_code:payment.amountUomId,
                     x_card_num:creditCard.cardNumber, x_exp_date:creditCard.expireDate,
                     x_card_code:creditCard.cardSecurityCode, x_card_type:cardTypeCode,
                     x_first_name:paymentMethod.firstNameOnAccount, x_last_name:paymentMethod.lastNameOnAccount,
