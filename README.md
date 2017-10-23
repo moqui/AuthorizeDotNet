@@ -2,8 +2,7 @@
 
 [![license](http://img.shields.io/badge/license-CC0%201.0%20Universal-blue.svg)](https://github.com/moqui/AuthorizeDotNet/blob/master/LICENSE.md)
 [![release](http://img.shields.io/github/release/moqui/AuthorizeDotNet.svg)](https://github.com/moqui/AuthorizeDotNet/releases)
-[![commits since release](http://img.shields.io/github/commits-since/moqui/AuthorizeDotNet/v1.1.0.svg)](https://github.com/moqui/AuthorizeDotNet/commits/master)
-[![downloads](http://img.shields.io/github/downloads/moqui/AuthorizeDotNet/total.svg)](https://github.com/moqui/AuthorizeDotNet/releases)
+[![commits since release](http://img.shields.io/github/commits-since/moqui/AuthorizeDotNet/v1.2.0.svg)](https://github.com/moqui/AuthorizeDotNet/commits/master)
 
 Moqui component for Authorize.Net AIM and CIM integrations that tie into Mantle payment processing and CIM integration to tokenize credit card information.
 
