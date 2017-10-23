@@ -10,6 +10,10 @@ To add this component to Moqui the easiest approach is to use the Gradle get com
 
     $ ./gradlew getComponent -Pcomponent=AuthorizeDotNet
 
+Or add a dependency in your component.xml file like:
+
+    <depends-on name="AuthorizeDotNet"/>
+
 To use simply:
 
 1. load the demo configuration data in data/AuthorizeDotNetDemoData.xml or create your own configuration and load it; if you use the demo data, add the login and tranKey credentials
