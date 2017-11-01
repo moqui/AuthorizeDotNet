@@ -21,20 +21,26 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="paymentMethodId" required="true"/>
             <parameter name="validateSecurityCode"/>
             <parameter name="paymentId"/>
-            <parameter name="paymentGatewayConfigId"><description>If not specified gets from AuthorizeNetCimPaymentGatewayConfigId user preference</description></parameter>
+            <parameter name="paymentGatewayConfigId"><description>If not specified gets from PaymentMethod or AuthorizeNetCimPaymentGatewayConfigId user preference</description></parameter>
         </in-parameters>
         <actions>
             <entity-find-one entity-name="mantle.account.method.CreditCard" value-field="creditCard"/>
             <!-- for now we are only supporting CreditCard, though we could also support BankAccount with Authorize.Net CIM -->
             <if condition="creditCard == null"><return/></if>
+            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
 
+            <!-- see if associated PaymentMethod has a paymentGatewayConfigId -->
+            <if condition="!paymentGatewayConfigId"><set field="paymentGatewayConfigId" from="paymentMethod?.paymentGatewayConfigId"/></if>
+            <!-- then try from AuthorizeNetCimPaymentGatewayConfigId preference -->
             <if condition="!paymentGatewayConfigId">
                 <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/></if>
             <if condition="!paymentGatewayConfigId"><log level="warn" message="In store#CustomerPaymentMethod no paymentGatewayConfigId specified or AuthorizeNetCimPaymentGatewayConfigId user preference found"/><return/></if>
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
-            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
-
-            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
+            <if condition="pgan == null">
+                <!-- this will happen regularly when PaymentMethod.paymentGatewayConfigId is for another gateway -->
+                <log message="Not saving payment method with Authorize.NET, no PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/>
+                <return/>
+            </if>
 
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
 
@@ -125,7 +131,7 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! will contain sensitive information: -->
             <!-- <log level="info" message="========== store#CustomerPaymentMethod requestString: \n${requestString}"/> -->
             <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(pgan.transactionUrl, requestString, 'text/xml')"/>
-            <log level="info" message="store#CustomerPaymentMethod responseString: \n${responseString}"/>
+            <log message="store#CustomerPaymentMethod responseString: \n${responseString}"/>
 
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
 
@@ -163,22 +169,21 @@ along with this software (see the LICENSE.md file). If not, see
                             responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage, resultSuccess:'Y', resultError:'N']"/>
 
             <!-- set the gatewayCimId values for Party and PaymentMethod as needed -->
-            <if condition="paymentMethod.gatewayCimId">
-                <!-- have a payment profile, called updateCustomerPaymentProfileRequest -->
-
-                <else-if condition="party.gatewayCimId">
-                    <!-- no payment profile but we have a customer profile, called createCustomerPaymentProfileRequest -->
-                    <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileId.text()"/>
-                    <entity-update value-field="paymentMethod"/>
-                </else-if>
-                <else>
-                    <!-- no customer or payment profile, called createCustomerProfileRequest -->
-                    <set field="party.gatewayCimId" from="responseNode.customerProfileId.text()"/>
-                    <entity-update value-field="party"/>
-                    <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileIdList.numericString.text()"/>
-                    <entity-update value-field="paymentMethod"/>
-                </else>
-            </if>
+            <if condition="paymentMethod.gatewayCimId"><then>
+                <!-- have a payment profile, called updateCustomerPaymentProfileRequest, no need to do anything -->
+            </then><else-if condition="party.gatewayCimId">
+                <!-- no payment profile but we have a customer profile, called createCustomerPaymentProfileRequest -->
+                <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileId.text()"/>
+                <set field="paymentMethod.paymentGatewayConfigId" from="paymentGatewayConfigId"/>
+                <entity-update value-field="paymentMethod"/>
+            </else-if><else>
+                <!-- no customer or payment profile, called createCustomerProfileRequest -->
+                <set field="party.gatewayCimId" from="responseNode.customerProfileId.text()"/>
+                <entity-update value-field="party"/>
+                <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileIdList.numericString.text()"/>
+                <set field="paymentMethod.paymentGatewayConfigId" from="paymentGatewayConfigId"/>
+                <entity-update value-field="paymentMethod"/>
+            </else></if>
 
             <!-- clear out creditCard.cardNumber and creditCard.cardSecurityCode -->
             <set field="creditCard.cardSecurityCode" from="null"/>
@@ -191,18 +196,20 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="delete" noun="CustomerPaymentMethod">
         <in-parameters><parameter name="paymentMethodId"/></in-parameters>
         <actions>
+            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
+            <!-- see if associated PaymentMethod has a paymentGatewayConfigId -->
+            <set field="paymentGatewayConfigId" from="paymentMethod?.paymentGatewayConfigId"/>
+            <!-- then try from AuthorizeNetCimPaymentGatewayConfigId preference -->
             <if condition="!paymentGatewayConfigId">
                 <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/></if>
             <if condition="!paymentGatewayConfigId"><log level="warn" message="In store#CustomerPaymentMethod no paymentGatewayConfigId specified or AuthorizeNetCimPaymentGatewayConfigId user preference found"/><return/></if>
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
-            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
+            <if condition="pgan == null">
+                <!-- this will happen regularly when PaymentMethod.paymentGatewayConfigId is for another gateway -->
+                <log message="Not deleting payment method with Authorize.NET, no PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/>
+                <return/>
+            </if>
 
-            <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/>
-            <if condition="!paymentGatewayConfigId"><return/></if>
-            <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
-            <if condition="pgan == null"><return/></if>
-
-            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
 
             <if condition="paymentMethod.gatewayCimId">

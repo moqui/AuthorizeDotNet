@@ -15,29 +15,40 @@ along with this software (see the LICENSE.md file). If not, see
 <secas xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://moqui.org/xsd/service-eca-2.1.xsd">
     <seca service="mantle.account.PaymentMethodServices.create#CreditCard" when="post-service"><!-- run in same tx so user gets any errors -->
         <actions>
-            <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
-            <if condition="enabled != 'true'"><return/></if>
+            <if condition="ec.user.getPreference('AuthorizeNetCimEnabled') != 'true'"><return/></if>
             <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod" in-map="context"/>
         </actions>
     </seca>
     <seca service="mantle.account.PaymentMethodServices.update#CreditCard" when="post-service"><!-- run in same tx so user gets any errors -->
         <actions>
-            <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
-            <if condition="enabled != 'true'"><return/></if>
+            <if condition="ec.user.getPreference('AuthorizeNetCimEnabled') != 'true'">
+                <!-- if not enabled but PaymentMethod has a paymentGatewayConfigId then call anyway, ie only return if no gateway on PaymentMethod -->
+                <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
+                <if condition="!paymentMethod.paymentGatewayConfigId"><return/></if>
+                <set field="paymentGatewayConfigId" from="paymentMethod.paymentGatewayConfigId"/>
+            </if>
             <service-call name="AuthorizeDotNet.CimServices.store#CustomerPaymentMethod" in-map="context"/>
         </actions>
     </seca>
     <seca service="mantle.account.PaymentMethodServices.delete#PaymentMethod" when="post-service">
         <actions>
-            <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
-            <if condition="enabled != 'true'"><return/></if>
+            <if condition="ec.user.getPreference('AuthorizeNetCimEnabled') != 'true'">
+                <!-- if not enabled but PaymentMethod has a paymentGatewayConfigId then call anyway, ie only return if no gateway on PaymentMethod -->
+                <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
+                <if condition="!paymentMethod.paymentGatewayConfigId"><return/></if>
+                <set field="paymentGatewayConfigId" from="paymentMethod.paymentGatewayConfigId"/>
+            </if>
             <service-call name="AuthorizeDotNet.CimServices.delete#CustomerPaymentMethod" in-map="context"/>
         </actions>
     </seca>
     <seca service="mantle.account.PaymentMethodServices.expunge#PaymentMethod" when="pre-service">
         <actions>
-            <set field="enabled" from="ec.user.getPreference('AuthorizeNetCimEnabled')"/>
-            <if condition="enabled != 'true'"><return/></if>
+            <if condition="ec.user.getPreference('AuthorizeNetCimEnabled') != 'true'">
+                <!-- if not enabled but PaymentMethod has a paymentGatewayConfigId then call anyway, ie only return if no gateway on PaymentMethod -->
+                <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
+                <if condition="!paymentMethod.paymentGatewayConfigId"><return/></if>
+                <set field="paymentGatewayConfigId" from="paymentMethod.paymentGatewayConfigId"/>
+            </if>
             <service-call name="AuthorizeDotNet.CimServices.delete#CustomerPaymentMethod" in-map="context"/>
         </actions>
     </seca>
