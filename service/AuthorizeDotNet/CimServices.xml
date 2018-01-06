@@ -120,7 +120,7 @@ along with this software (see the LICENSE.md file). If not, see
 <createCustomerProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
     <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
     <profile>
-        <merchantCustomerId>${party.partyId}</merchantCustomerId>
+        <merchantCustomerId>${party.partyId}_${getRandomString(5)}</merchantCustomerId>
         <email>${emailContactMech?.infoString ?: ''}</email>
         <paymentProfiles>
             <customerType>${party.partyTypeEnumId == 'PtyPerson' ? 'individual' : 'business'}</customerType>
