@@ -78,9 +78,9 @@ along with this software (see the LICENSE.md file). If not, see
     <paymentProfile>
         <customerType>${party.partyTypeEnumId == 'PtyPerson' ? 'individual' : 'business'}</customerType>
         <billTo>
-            <firstName>${paymentMethod.firstNameOnAccount ?: ''}</firstName><lastName>${paymentMethod.lastNameOnAccount ?: ''}</lastName>
-            <company>${paymentMethod.companyNameOnAccount ?: ''}</company>
-            <address>${postalAddress.address1}</address><city>${postalAddress.city}</city>
+            <firstName>${encodeForXmlAttribute(paymentMethod.firstNameOnAccount)}</firstName><lastName>${encodeForXmlAttribute(paymentMethod.lastNameOnAccount)}</lastName>
+            <company>${encodeForXmlAttribute(paymentMethod.companyNameOnAccount)}</company>
+            <address>${encodeForXmlAttribute(postalAddress.address1)}</address><city>${encodeForXmlAttribute(postalAddress.city)}</city>
             <state>${stateProvinceGeo?.geoCodeAlpha2 ?: stateProvinceGeo?.geoCodeAlpha3 ?: postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}${postalAddress.postalCodeExt ? '-' + postalAddress.postalCodeExt : ''}</zip>
             <country>${postalAddress.countryGeoId}</country>
             <phoneNumber>${phone ?: ''}</phoneNumber>
@@ -101,9 +101,9 @@ along with this software (see the LICENSE.md file). If not, see
     <paymentProfile>
         <customerType>${party.partyTypeEnumId == 'PtyPerson' ? 'individual' : 'business'}</customerType>
         <billTo>
-            <firstName>${paymentMethod.firstNameOnAccount ?: ''}</firstName><lastName>${paymentMethod.lastNameOnAccount ?: ''}</lastName>
-            <company>${paymentMethod.companyNameOnAccount ?: ''}</company>
-            <address>${postalAddress.address1}</address><city>${postalAddress.city}</city>
+            <firstName>${encodeForXmlAttribute(paymentMethod.firstNameOnAccount)}</firstName><lastName>${encodeForXmlAttribute(paymentMethod.lastNameOnAccount)}</lastName>
+            <company>${encodeForXmlAttribute(paymentMethod.companyNameOnAccount)}</company>
+            <address>${encodeForXmlAttribute(postalAddress.address1)}</address><city>${encodeForXmlAttribute(postalAddress.city)}</city>
             <state>${stateProvinceGeo?.geoCodeAlpha2 ?: stateProvinceGeo?.geoCodeAlpha3 ?: postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}${postalAddress.postalCodeExt ? '-' + postalAddress.postalCodeExt : ''}</zip>
             <country>${postalAddress.countryGeoId}</country>
             <phoneNumber>${phone ?: ''}</phoneNumber>
@@ -125,9 +125,9 @@ along with this software (see the LICENSE.md file). If not, see
         <paymentProfiles>
             <customerType>${party.partyTypeEnumId == 'PtyPerson' ? 'individual' : 'business'}</customerType>
             <billTo>
-                <firstName>${paymentMethod.firstNameOnAccount}</firstName><lastName>${paymentMethod.lastNameOnAccount}</lastName>
-                <company>${paymentMethod.companyNameOnAccount ?: ''}</company>
-                <address>${postalAddress.address1}</address><city>${postalAddress.city}</city>
+                <firstName>${encodeForXmlAttribute(paymentMethod.firstNameOnAccount)}</firstName><lastName>${encodeForXmlAttribute(paymentMethod.lastNameOnAccount)}</lastName>
+                <company>${encodeForXmlAttribute(paymentMethod.companyNameOnAccount)}</company>
+                <address>${encodeForXmlAttribute(postalAddress.address1)}</address><city>${encodeForXmlAttribute(postalAddress.city)}</city>
                 <state>${stateProvinceGeo?.geoCodeAlpha2 ?: stateProvinceGeo?.geoCodeAlpha3 ?: postalAddress.stateProvinceGeoId}</state><zip>${postalAddress.postalCode}${postalAddress.postalCodeExt ? '-' + postalAddress.postalCodeExt : ''}</zip>
                 <country>${postalAddress.countryGeoId}</country>
                 <phoneNumber>${phone ?: ''}</phoneNumber>
