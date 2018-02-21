@@ -51,7 +51,8 @@ along with this software (see the LICENSE.md file). If not, see
             authorizeServiceName="AuthorizeDotNet.CimPaymentServices.authorize#Payment"
             captureServiceName="AuthorizeDotNet.CimPaymentServices.capture#Payment"
             releaseServiceName="AuthorizeDotNet.CimPaymentServices.release#Payment"
-            refundServiceName="AuthorizeDotNet.CimPaymentServices.refund#Payment"/>
+            refundServiceName="AuthorizeDotNet.CimPaymentServices.refund#Payment"
+            detailsServiceName="AuthorizeDotNet.CimPaymentServices.get#PaymentGatewayDetails"/>
     <!-- config for authorize and capture right away, no deferred capture:
     <mantle.account.method.PaymentGatewayConfig paymentGatewayConfigId="AuthorizeDotNetCimDemo"
            paymentGatewayTypeEnumId="PgtAuthorizeDotNet" description="Authorize.Net Demo Config"

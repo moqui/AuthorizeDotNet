@@ -93,7 +93,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="paymentRefNum" from="payment.paymentRefNum"/>
             <if condition="!paymentRefNum">
                 <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
-                <if condition="!paymentGatewayResponse"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
+                <if condition="paymentGatewayResponse == null"><return error="true" message="Could not find successful authorization for Payment ${paymentId}"/></if>
                 <set field="paymentRefNum" from="paymentGatewayResponse.referenceNum"/>
             </if>
             <if condition="!paymentRefNum"><return error="true" message="Could not find authorization transaction ID (reference number) for Payment ${paymentId}"/></if>
@@ -261,6 +261,93 @@ along with this software (see the LICENSE.md file). If not, see
         </actions>
     </service>
 
+    <service verb="get" noun="PaymentGatewayDetails">
+        <implements service="mantle.account.PaymentServices.get#PaymentGatewayDetails"/>
+        <out-parameters>
+            <parameter name="transactionStatus"/>
+        </out-parameters>
+        <actions>
+            <entity-find-one entity-name="mantle.account.payment.Payment" value-field="payment"/>
+            <if condition="payment == null"><return message="Payment ${paymentId} not found"/></if>
+            <set field="paymentMethod" from="payment.'mantle.account.method.PaymentMethod'"/>
+            <if condition="paymentMethod?.paymentMethodTypeEnumId != 'PmtCreditCard'">
+                <return error="true" message="Cannot get transaction details for payment ${paymentId}, not a Credit Card payment."/></if>
+
+
+            <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
+            <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
+
+            <set field="referenceNum" from="payment.paymentRefNum"/>
+            <if condition="!referenceNum">
+                <service-call name="mantle.account.PaymentServices.get#AuthorizePaymentGatewayResponse" in-map="context" out-map="context"/>
+                <set field="referenceNum" from="paymentGatewayResponse?.referenceNum"/>
+            </if>
+            <if condition="!referenceNum"><return error="true" message="Could not find transaction ID (reference number) for Payment ${paymentId}"/></if>
+
+            <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
+<getTransactionDetailsRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
+      <merchantAuthentication><name>${pgan.login}</name><transactionKey>${pgan.tranKey}</transactionKey></merchantAuthentication>
+      <transId>${referenceNum}</transId>
+</getTransactionDetailsRequest>
+            """]]></script>
+
+            <set field="paymentOperationEnumId" value="PgoTxDetails"/>
+            <set field="transactionUrl" from="pgan.transactionUrl"/>
+            <service-call name="AuthorizeDotNet.CimPaymentServices.send#CimRequest" in-map="context + [saveResponse:false]" out-map="context"/>
+            <set field="transactionNode" from="responseNode.transaction[0]"/>
+
+            <!-- Authorize.NET transactionStatus values and corresponding Payment statusId to determine needed action:
+            authorizedPendingCapture   PmntAuthorized
+            capturedPendingSettlement  PmntDelivered
+            communicationError
+            refundSettledSuccessfully  PmntConfirmed (original Payment confirmed, will be separate Payment for refund)
+            refundPendingSettlement    PmntConfirmed (original Payment confirmed, will be separate Payment for refund)
+            approvedReview
+            declined                   PmntDeclined
+            couldNotVoid
+            expired                    PmntPromised
+            generalError
+            failedReview
+            settledSuccessfully        PmntConfirmed
+            settlementError
+            underReview
+            voided                     PmntVoid
+            FDSPendingReview
+            FDSAuthorizedPendingReview
+            returnedItem
+            -->
+            <set field="transactionStatus" from="transactionNode?.transactionStatus?.getAt(0)?.text()"/>
+            <if condition="transactionStatus">
+                <set field="authNetStatusMap" from="[authorizedPendingCapture:'PmntAuthorized',
+                    refundSettledSuccessfully:'PmntConfirmed', refundPendingSettlement:'PmntConfirmed',
+                    capturedPendingSettlement:'PmntDelivered', settledSuccessfully:'PmntConfirmed',
+                    declined:'PmntDeclined', expired:'PmntPromised', failedReview:'PmntPromised', voided:'PmntVoid']"/>
+                <set field="gatewayStatusId" from="authNetStatusMap.get(transactionStatus)"/>
+            </if>
+
+            <if condition="!gatewayStatusId || gatewayStatusId != payment.statusId">
+                <!-- save PaymentGatewayResponse including transaction status -->
+                <if condition="responseNode.messages">
+                    <set field="responseCode" from="responseNode.messages[0].resultCode[0]?.text()"/>
+                    <if condition="responseNode.messages[0].message">
+                        <set field="message" from="responseNode.messages[0].message[0]"/>
+                        <set field="reasonCode" from="message.code[0]?.text()"/>
+                        <set field="reasonMessage" from="message.text[0]?.text()"/>
+                    </if>
+                </if>
+                <if condition="reasonMessage != null &amp;&amp; reasonMessage.length() > 255"><set field="reasonMessage" from="reasonMessage.substring(0, 255)"/></if>
+                <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
+                        in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:paymentOperationEnumId,
+                            paymentId:payment.paymentId, paymentMethodId:payment.paymentMethodId,
+                            amount:payment.amount, amountUomId:payment.amountUomId, transactionDate:ec.user.nowTimestamp,
+                            responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage,
+                            resultError:(responseCode == 'Ok' ? 'N' : 'Y'), resultDeclined:(transactionStatus == 'declined' ? 'Y' : 'N'),
+                            transactionStatus:transactionStatus]"/>
+                <!-- TODO: other details like settlement date, etc? -->
+            </if>
+        </actions>
+    </service>
+
     <service verb="send" noun="CimRequest">
         <in-parameters>
             <parameter name="transactionUrl" required="true"/>
@@ -268,15 +355,18 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="paymentOperationEnumId" required="true"/>
             <parameter name="payment" type="EntityValue" required="true"/>
             <parameter name="paymentGatewayConfigId" required="true"/>
+            <parameter name="saveResponse" type="Boolean" default="true"/>
         </in-parameters>
         <out-parameters>
             <parameter name="paymentGatewayResponseId"/>
+            <parameter name="responseNode" type="groovy.util.Node"/>
         </out-parameters>
         <actions>
             <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! may contain sensitive information: -->
-            <!-- <log level="info" message="========== CimPaymentServices ${paymentOperationEnumId} requestString: \n${requestString}"/> -->
+            <!-- NOTE2: for CIM only sensitive information is merchant autht name and transactionKey, logging for now for issue research -->
+            <log message="CimPaymentServices payment ${payment?.paymentId} ${paymentOperationEnumId} requestString: \n${requestString}"/>
             <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(transactionUrl, requestString, 'text/xml')"/>
-            <log message="CimPaymentServices ${paymentOperationEnumId} responseString: \n${responseString}"/>
+            <log message="CimPaymentServices payment ${payment?.paymentId} ${paymentOperationEnumId} responseString: \n${responseString}"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
 
             <if condition="responseNode.messages">
@@ -288,21 +378,24 @@ along with this software (see the LICENSE.md file). If not, see
                 </if>
             </if>
             <if condition="reasonMessage"><message>${reasonMessage}</message></if>
-            <if condition="responseNode.directResponse"><then>
-                <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" out-map="context"
-                        in-map="[paymentId:payment.paymentId, paymentOperationEnumId:paymentOperationEnumId,
+
+            <if condition="saveResponse">
+                <if condition="responseNode.directResponse"><then>
+                    <service-call name="AuthorizeDotNet.AimPaymentServices.save#AimResponse" out-map="context"
+                            in-map="[paymentId:payment.paymentId, paymentOperationEnumId:paymentOperationEnumId,
                             paymentGatewayConfigId:paymentGatewayConfigId,
                             responseString:responseNode.directResponse[0].text(), delimeter:',']"/>
-            </then><else>
-                <log level="warn" message="No directResponse in authorize payment [${payment.paymentId}], responseString: \n${responseString}"/>
-                <if condition="reasonMessage != null &amp;&amp; reasonMessage.length() > 255"><set field="reasonMessage" from="reasonMessage.substring(0, 255)"/></if>
-                <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
-                        in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:paymentOperationEnumId,
-                            paymentId:payment.paymentId, paymentMethodId:payment.paymentMethodId,
-                            amount:payment.amount, amountUomId:payment.amountUomId, transactionDate:ec.user.nowTimestamp,
-                            responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage,
-                            resultSuccess:'N', resultDeclined:'N', resultError:'Y', resultBadExpire:'N', resultBadCardNumber:'N']"/>
-            </else></if>
+                </then><else>
+                    <log level="warn" message="No directResponse in gateway request for payment ${payment.paymentId}, responseString: \n${responseString}"/>
+                    <if condition="reasonMessage != null &amp;&amp; reasonMessage.length() > 255"><set field="reasonMessage" from="reasonMessage.substring(0, 255)"/></if>
+                    <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
+                            in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:paymentOperationEnumId,
+                                paymentId:payment.paymentId, paymentMethodId:payment.paymentMethodId,
+                                amount:payment.amount, amountUomId:payment.amountUomId, transactionDate:ec.user.nowTimestamp,
+                                responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage,
+                                resultSuccess:'N', resultDeclined:'N', resultError:'Y', resultBadExpire:'N', resultBadCardNumber:'N']"/>
+                </else></if>
+            </if>
         </actions>
     </service>
 </services>
