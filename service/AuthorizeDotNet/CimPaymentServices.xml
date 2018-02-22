@@ -294,7 +294,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="paymentOperationEnumId" value="PgoTxDetails"/>
             <set field="transactionUrl" from="pgan.transactionUrl"/>
             <service-call name="AuthorizeDotNet.CimPaymentServices.send#CimRequest" in-map="context + [saveResponse:false]" out-map="context"/>
-            <set field="transactionNode" from="responseNode.transaction[0]"/>
+            <set field="transactionNode" from="responseNode?.transaction?.getAt(0)"/>
 
             <!-- Authorize.NET transactionStatus values and corresponding Payment statusId to determine needed action:
             authorizedPendingCapture   PmntAuthorized
@@ -319,11 +319,18 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="transactionStatus" from="transactionNode?.transactionStatus?.getAt(0)?.text()"/>
             <if condition="transactionStatus">
                 <set field="authNetStatusMap" from="[authorizedPendingCapture:'PmntAuthorized',
-                    refundSettledSuccessfully:'PmntConfirmed', refundPendingSettlement:'PmntConfirmed',
-                    capturedPendingSettlement:'PmntDelivered', settledSuccessfully:'PmntConfirmed',
-                    declined:'PmntDeclined', expired:'PmntPromised', failedReview:'PmntPromised', voided:'PmntVoid']"/>
+                        refundSettledSuccessfully:'PmntConfirmed', refundPendingSettlement:'PmntConfirmed',
+                        capturedPendingSettlement:'PmntDelivered', settledSuccessfully:'PmntConfirmed',
+                        declined:'PmntDeclined', expired:'PmntPromised', failedReview:'PmntPromised', voided:'PmntVoid']"/>
                 <set field="gatewayStatusId" from="authNetStatusMap.get(transactionStatus)"/>
             </if>
+
+            <set field="referenceNum" from="transactionNode?.transId?.getAt(0)?.text()"/>
+            <!-- no real use for this, for auth then capture is auth date and not the best effectiveDate: <set field="submitTimeUTC" from="transactionNode?.submitTimeUTC?.getAt(0)?.text()"/> -->
+            <set field="settlementTimeUTC" from="transactionNode?.batch?.getAt(0)?.settlementTimeUTC?.getAt(0)?.text()"/>
+            <set field="settlementDate" from="ec.l10n.parseTimestamp(settlementTimeUTC, 'yyyy-MM-dd\'T\'HH:mm:ss.SSSZ', null, TimeZone.getTimeZone('GMT'))"/>
+
+            <!-- <log level="warn" message="referenceNum ${referenceNum} transactionStatus ${transactionStatus} settlementTimeUTC ${settlementTimeUTC} settlementDate ${settlementDate}"/> -->
 
             <if condition="!gatewayStatusId || gatewayStatusId != payment.statusId">
                 <!-- save PaymentGatewayResponse including transaction status -->
@@ -338,12 +345,11 @@ along with this software (see the LICENSE.md file). If not, see
                 <if condition="reasonMessage != null &amp;&amp; reasonMessage.length() > 255"><set field="reasonMessage" from="reasonMessage.substring(0, 255)"/></if>
                 <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
                         in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:paymentOperationEnumId,
-                            paymentId:payment.paymentId, paymentMethodId:payment.paymentMethodId,
+                            paymentId:payment.paymentId, paymentMethodId:payment.paymentMethodId, referenceNum:referenceNum,
                             amount:payment.amount, amountUomId:payment.amountUomId, transactionDate:ec.user.nowTimestamp,
                             responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage,
                             resultError:(responseCode == 'Ok' ? 'N' : 'Y'), resultDeclined:(transactionStatus == 'declined' ? 'Y' : 'N'),
                             transactionStatus:transactionStatus]"/>
-                <!-- TODO: other details like settlement date, etc? -->
             </if>
         </actions>
     </service>
@@ -355,6 +361,7 @@ along with this software (see the LICENSE.md file). If not, see
             <parameter name="paymentOperationEnumId" required="true"/>
             <parameter name="payment" type="EntityValue" required="true"/>
             <parameter name="paymentGatewayConfigId" required="true"/>
+            <parameter name="pgan" type="Map"/>
             <parameter name="saveResponse" type="Boolean" default="true"/>
         </in-parameters>
         <out-parameters>
@@ -364,7 +371,9 @@ along with this software (see the LICENSE.md file). If not, see
         <actions>
             <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! may contain sensitive information: -->
             <!-- NOTE2: for CIM only sensitive information is merchant autht name and transactionKey, logging for now for issue research -->
-            <log message="CimPaymentServices payment ${payment?.paymentId} ${paymentOperationEnumId} requestString: \n${requestString}"/>
+            <set field="logReqString" from="pgan ? requestString?.replace(pgan.login, 'XXXX')?.replace(pgan.tranKey, 'XXXX') : requestString"/>
+            <log message="CimPaymentServices payment ${payment?.paymentId} ${paymentOperationEnumId} requestString: \n${logReqString}"/>
+            <!-- do the HTTP request -->
             <set field="responseString" from="org.moqui.util.WebUtilities.simpleHttpStringRequest(transactionUrl, requestString, 'text/xml')"/>
             <log message="CimPaymentServices payment ${payment?.paymentId} ${paymentOperationEnumId} responseString: \n${responseString}"/>
             <set field="responseNode" from="new XmlParser().parseText(responseString)"/>
