@@ -27,7 +27,7 @@ along with this software (see the LICENSE.md file). If not, see
             <entity-find-one entity-name="mantle.account.method.CreditCard" value-field="creditCard"/>
             <!-- for now we are only supporting CreditCard, though we could also support BankAccount with Authorize.Net CIM -->
             <if condition="creditCard == null"><return/></if>
-            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
+            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod" for-update="true"/>
 
             <!-- see if associated PaymentMethod has a paymentGatewayConfigId -->
             <if condition="!paymentGatewayConfigId"><set field="paymentGatewayConfigId" from="paymentMethod?.paymentGatewayConfigId"/></if>
