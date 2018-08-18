@@ -16,6 +16,30 @@ along with this software (see the LICENSE.md file). If not, see
 
     <!-- These services are based on the Authorize.Net CIM API, version 1. See: http://developer.authorize.net/api/cim/ -->
 
+    <service verb="get" noun="PaymentGatewayConfig">
+        <in-parameters>
+            <parameter name="paymentMethod" type="EntityValue"/>
+            <parameter name="paymentGatewayConfigId"/>
+        </in-parameters>
+        <out-parameters><parameter name="paymentGatewayConfigId"/></out-parameters>
+        <actions>
+            <!-- see if associated PaymentMethod has a paymentGatewayConfigId -->
+            <if condition="!paymentGatewayConfigId"><set field="paymentGatewayConfigId" from="paymentMethod?.paymentGatewayConfigId"/></if>
+            <!-- then try from PartySetting VaultPaymentGatewayConfigId if PaymentMethod.ownerPartyId is owned by an internal org (Party.ownerPartyId) -->
+            <if condition="!paymentGatewayConfigId &amp;&amp; paymentMethod?.ownerPartyId">
+                <set field="ownerParty" from="paymentMethod.ownerParty"/>
+                <if condition="ownerParty?.ownerPartyId">
+                    <service-call name="mantle.party.PartyServices.get#PartySettingValue" out-map="ptySettingOut"
+                            in-map="[partyId:ownerParty.ownerPartyId, partySettingTypeId:'VaultPaymentGatewayConfigId']"/>
+                    <set field="paymentGatewayConfigId" from="ptySettingOut?.settingValue"/>
+                </if>
+            </if>
+            <!-- then try from AuthorizeNetCimPaymentGatewayConfigId preference -->
+            <if condition="!paymentGatewayConfigId">
+                <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/></if>
+        </actions>
+    </service>
+
     <service verb="store" noun="CustomerPaymentMethod" authenticate="anonymous-all">
         <in-parameters>
             <parameter name="paymentMethodId" required="true"/>
@@ -29,11 +53,7 @@ along with this software (see the LICENSE.md file). If not, see
             <if condition="creditCard == null"><return/></if>
             <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod" for-update="true"/>
 
-            <!-- see if associated PaymentMethod has a paymentGatewayConfigId -->
-            <if condition="!paymentGatewayConfigId"><set field="paymentGatewayConfigId" from="paymentMethod?.paymentGatewayConfigId"/></if>
-            <!-- then try from AuthorizeNetCimPaymentGatewayConfigId preference -->
-            <if condition="!paymentGatewayConfigId">
-                <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/></if>
+            <service-call name="AuthorizeDotNet.CimServices.get#PaymentGatewayConfig" in-map="context" out-map="context"/>
             <if condition="!paymentGatewayConfigId"><log level="warn" message="In store#CustomerPaymentMethod no paymentGatewayConfigId specified or AuthorizeNetCimPaymentGatewayConfigId user preference found"/><return/></if>
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null">
@@ -209,12 +229,9 @@ along with this software (see the LICENSE.md file). If not, see
     <service verb="delete" noun="CustomerPaymentMethod">
         <in-parameters><parameter name="paymentMethodId"/></in-parameters>
         <actions>
-            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod"/>
-            <!-- see if associated PaymentMethod has a paymentGatewayConfigId -->
-            <set field="paymentGatewayConfigId" from="paymentMethod?.paymentGatewayConfigId"/>
-            <!-- then try from AuthorizeNetCimPaymentGatewayConfigId preference -->
-            <if condition="!paymentGatewayConfigId">
-                <set field="paymentGatewayConfigId" from="ec.user.getPreference('AuthorizeNetCimPaymentGatewayConfigId')"/></if>
+            <entity-find-one entity-name="mantle.account.method.PaymentMethod" value-field="paymentMethod" for-update="true"/>
+
+            <service-call name="AuthorizeDotNet.CimServices.get#PaymentGatewayConfig" in-map="context" out-map="context"/>
             <if condition="!paymentGatewayConfigId"><log level="warn" message="In delete#CustomerPaymentMethod no paymentGatewayConfigId specified or AuthorizeNetCimPaymentGatewayConfigId user preference found"/><return/></if>
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null">
