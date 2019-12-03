@@ -2,6 +2,17 @@
 Mantle Authorize.NET Integration Release Notes
 
 ===========================================================================
+Release 1.2.3 - Not Yet Released
+===========================================================================
+
+Mantle Authorize.NET Integration 1.2.3 is a patch level update release.
+
+There are only minor changes and fixes in this release. For a complete
+list of changes see:
+
+https://github.com/moqui/AuthorizeDotNet/compare/v1.2.2...v1.2.3
+
+===========================================================================
 Release 1.2.2 - 23 July 2019
 ===========================================================================
 
@@ -10,7 +21,7 @@ Mantle Authorize.NET Integration 1.2.2 is a patch level update release.
 There are only minor changes and fixes in this release. For a complete
 list of changes see:
 
-https://github.com/moqui/moqui-elasticsearch/compare/v1.2.0...v1.2.1
+https://github.com/moqui/AuthorizeDotNet/compare/v1.2.1...v1.2.2
 
 ===========================================================================
 Release 1.2.1 - 29 Nov 2018
