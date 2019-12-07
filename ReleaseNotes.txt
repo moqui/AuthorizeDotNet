@@ -2,7 +2,7 @@
 Mantle Authorize.NET Integration Release Notes
 
 ===========================================================================
-Release 1.2.3 - Not Yet Released
+Release 1.2.3 - 07 Dec 2019
 ===========================================================================
 
 Mantle Authorize.NET Integration 1.2.3 is a patch level update release.
