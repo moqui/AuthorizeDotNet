@@ -41,8 +41,10 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
-            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
-            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!party.gatewayCimId">
+                <return type="danger" message="Party ${party.partyId} has no gateway CIM ID, not authorizing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId">
+                <return type="danger" message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not authorizing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
@@ -84,8 +86,10 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
-            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
-            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!party.gatewayCimId">
+                <return type="danger" message="Party ${party.partyId} has no gateway CIM ID, not capturing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId">
+                <return type="danger" message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not capturing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
@@ -143,8 +147,10 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
-            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
-            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!party.gatewayCimId">
+                <return type="danger" message="Party ${party.partyId} has no gateway CIM ID, not authorizing and capturing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId">
+                <return type="danger" message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not authorizing and capturing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
@@ -185,8 +191,10 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
-            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
-            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!party.gatewayCimId">
+                <return type="danger" message="Party ${party.partyId} has no gateway CIM ID, not releasing payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId">
+                <return type="danger" message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not releasing payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>
@@ -232,8 +240,10 @@ along with this software (see the LICENSE.md file). If not, see
             </if>
             <!-- get party after CIM check so that gatewayCimId will be populated -->
             <set field="party" from="paymentMethod.'Owner#mantle.party.Party'"/>
-            <if condition="!party.gatewayCimId"><return message="Party ${party.partyId} has no gateway CIM ID, not processing payment"/></if>
-            <if condition="!paymentMethod.gatewayCimId"><return message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not processing payment"/></if>
+            <if condition="!party.gatewayCimId">
+                <return type="danger" message="Party ${party.partyId} has no gateway CIM ID, not refunding payment"/></if>
+            <if condition="!paymentMethod.gatewayCimId">
+                <return type="danger" message="Payment Method ${paymentMethod.paymentMethodId} has no gateway CIM ID, not refunding payment"/></if>
 
             <entity-find-one entity-name="AuthorizeDotNet.PaymentGatewayAuthorizeNet" value-field="pgan"/>
             <if condition="pgan == null"><log level="error" message="No PaymentGatewayAuthorizeNet found with ID ${paymentGatewayConfigId}"/><return/></if>

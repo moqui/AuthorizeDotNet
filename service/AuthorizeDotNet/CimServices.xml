@@ -193,7 +193,7 @@ along with this software (see the LICENSE.md file). If not, see
                         in-map="[paymentGatewayConfigId:paymentGatewayConfigId, paymentOperationEnumId:'PgoStoreCim',
                             paymentMethodId:paymentMethodId, paymentId:paymentId, transactionDate:ec.user.nowTimestamp,
                             responseCode:responseCode, reasonCode:reasonCode, reasonMessage:reasonMessage, resultSuccess:'N', resultError:'Y']"/>
-                <return message="Could not save CIM payment method ${paymentMethodId}, message: ${reasonMessage}"/>
+                <return type="danger" message="Could not save CIM payment method ${paymentMethodId}, message: ${reasonMessage}"/>
             </if>
 
             <service-call name="create#mantle.account.method.PaymentGatewayResponse" out-map="context"
