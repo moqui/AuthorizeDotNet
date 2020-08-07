@@ -89,6 +89,14 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="expireDateFormatted" value="${expireYear}-${expireMonth}"/>
             <!-- correct masking if needed, use only 'X' -->
             <set field="cardNumber" from="creditCard.cardNumber?.replaceAll(/\D/, 'X')"/>
+
+            <!-- clear out creditCard.cardNumber and creditCard.cardSecurityCode -->
+            <set field="creditCard.cardSecurityCode" from="null"/>
+            <set field="creditCard.cardNumber"
+                    from="'*'.padRight(creditCard.cardNumber.length() - 4, '*') + creditCard.cardNumber.substring(creditCard.cardNumber.length() - 4, creditCard.cardNumber.length())"/>
+            <entity-update value-field="creditCard"/>
+
+
             <if condition="paymentMethod.gatewayCimId"><then>
                 <!-- have a payment profile, call updateCustomerPaymentProfileRequest -->
                 <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
@@ -217,12 +225,6 @@ along with this software (see the LICENSE.md file). If not, see
                 <set field="paymentMethod.paymentGatewayConfigId" from="paymentGatewayConfigId"/>
                 <entity-update value-field="paymentMethod"/>
             </else></if>
-
-            <!-- clear out creditCard.cardNumber and creditCard.cardSecurityCode -->
-            <set field="creditCard.cardSecurityCode" from="null"/>
-            <set field="creditCard.cardNumber"
-                    from="'*'.padRight(creditCard.cardNumber.length() - 4, '*') + creditCard.cardNumber.substring(creditCard.cardNumber.length() - 4, creditCard.cardNumber.length())"/>
-            <entity-update value-field="creditCard"/>
         </actions>
     </service>
 
