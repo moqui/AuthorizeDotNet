@@ -89,6 +89,7 @@ along with this software (see the LICENSE.md file). If not, see
             <set field="expireDateFormatted" value="${expireYear}-${expireMonth}"/>
             <!-- correct masking if needed, use only 'X' -->
             <set field="cardNumber" from="creditCard.cardNumber?.replaceAll(/\D/, 'X')"/>
+            <set field="cardSecurityCode" from="creditCard.cardSecurityCode" />
 
             <!-- clear out creditCard.cardNumber and creditCard.cardSecurityCode -->
             <set field="creditCard.cardSecurityCode" from="null"/>
@@ -114,7 +115,7 @@ along with this software (see the LICENSE.md file). If not, see
             <phoneNumber>${phone ?: ''}</phoneNumber>
         </billTo>
         <payment><creditCard><cardNumber>${cardNumber}</cardNumber><expirationDate>${expireDateFormatted}</expirationDate>
-            ${validateSecurityCode || creditCard.cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: creditCard.cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
+            ${validateSecurityCode || cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
         <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
     </paymentProfile>
     <validationMode>${pgan.validationMode}</validationMode>
@@ -137,7 +138,7 @@ along with this software (see the LICENSE.md file). If not, see
             <phoneNumber>${phone ?: ''}</phoneNumber>
         </billTo>
         <payment><creditCard><cardNumber>${cardNumber}</cardNumber><expirationDate>${expireDateFormatted}</expirationDate>
-            ${validateSecurityCode || creditCard.cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: creditCard.cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
+            ${validateSecurityCode || cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
     </paymentProfile>
     <validationMode>${pgan.validationMode}</validationMode>
 </createCustomerPaymentProfileRequest>
@@ -161,7 +162,7 @@ along with this software (see the LICENSE.md file). If not, see
                 <phoneNumber>${phone ?: ''}</phoneNumber>
             </billTo>
             <payment><creditCard><cardNumber>${cardNumber}</cardNumber><expirationDate>${expireDateFormatted}</expirationDate>
-                ${validateSecurityCode || creditCard.cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: creditCard.cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
+                ${validateSecurityCode || cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
         </paymentProfiles>
      </profile>
     <validationMode>${pgan.validationMode}</validationMode>
