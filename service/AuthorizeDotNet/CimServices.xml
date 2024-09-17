@@ -90,6 +90,24 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- correct masking if needed, use only 'X' -->
             <set field="cardNumber" from="creditCard.cardNumber?.replaceAll(/\D/, 'X')"/>
             <if condition="paymentMethod.gatewayCimId"><then>
+                <!-- current paymentMethod has a gatewayCimId -->
+                <set field="foundGatewayCimId" from="paymentMethod.gatewayCimId"/>
+            </then><else>
+                <log message="store#CustomerPaymentMethod -> looking up previous paymentMethods for party ${paymentMethod.ownerPartyId}"/>
+                <!-- current paymentMethod was not stored with CIM, but perhaps a previous one was -->
+                <entity-find entity-name="mantle.account.method.PaymentMethod" list="partyPaymentMethodsWithCim">
+                    <econdition field-name="ownerPartyId" from="paymentMethod.ownerPartyId"/>
+                    <econdition field-name="paymentGatewayConfigId" from="paymentGatewayConfigId"/>
+                    <econdition field-name="gatewayCimId" operator="is-not-null"/>
+                    <order-by field-name="-from-date"/>
+                </entity-find>
+                <if condition="!partyPaymentMethodsWithCim.isEmpty()">
+                    <!-- found previous paymentMethods for this gateway, use the most recent gatewayCimId -->
+                    <set field="foundGatewayCimId" from="partyPaymentMethodsWithCim[0].gatewayCimId"/>
+                </if>
+            </else></if>
+
+            <if condition="foundGatewayCimId"><then>
                 <!-- have a payment profile, call updateCustomerPaymentProfileRequest -->
                 <script><![CDATA[requestString = """<?xml version="1.0" encoding="utf-8"?>
 <updateCustomerPaymentProfileRequest xmlns="AnetApi/xml/v1/schema/AnetApiSchema.xsd">
@@ -107,7 +125,7 @@ along with this software (see the LICENSE.md file). If not, see
         </billTo>
         <payment><creditCard><cardNumber>${cardNumber}</cardNumber><expirationDate>${expireDateFormatted}</expirationDate>
             ${validateSecurityCode || creditCard.cardSecurityCode ? ('<cardCode>' + (validateSecurityCode ?: creditCard.cardSecurityCode) + '</cardCode>') : ''}</creditCard></payment>
-        <customerPaymentProfileId>${paymentMethod.gatewayCimId}</customerPaymentProfileId>
+        <customerPaymentProfileId>${foundGatewayCimId}</customerPaymentProfileId>
     </paymentProfile>
     <validationMode>${pgan.validationMode}</validationMode>
 </updateCustomerPaymentProfileRequest>
@@ -203,8 +221,13 @@ along with this software (see the LICENSE.md file). If not, see
 
             <!-- set the gatewayCimId values for Party and PaymentMethod as needed -->
             <if condition="paymentMethod.gatewayCimId"><then>
-                <!-- have a payment profile, called updateCustomerPaymentProfileRequest, no need to do anything -->
-            </then><else-if condition="party.gatewayCimId">
+                <!-- current paymentMethod has a profile, no need to do anything -->
+            </then><else-if condition="foundGatewayCimId">
+                <!-- Updating a previous profile, attach to the current paymentMethod -->
+                <set field="paymentMethod.gatewayCimId" from="foundGatewayCimId"/>
+                <set field="paymentMethod.paymentGatewayConfigId" from="paymentGatewayConfigId"/>
+                <entity-update value-field="paymentMethod"/>
+            </else-if><else-if condition="party.gatewayCimId">
                 <!-- no payment profile but we have a customer profile, called createCustomerPaymentProfileRequest -->
                 <set field="paymentMethod.gatewayCimId" from="responseNode.customerPaymentProfileId.text()"/>
                 <set field="paymentMethod.paymentGatewayConfigId" from="paymentGatewayConfigId"/>
