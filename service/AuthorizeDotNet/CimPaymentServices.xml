@@ -381,7 +381,8 @@ along with this software (see the LICENSE.md file). If not, see
             <!-- NOTE: ALWAYS REMOVE THIS BEFORE COMMIT! may contain sensitive information: -->
             <!-- NOTE2: for CIM only sensitive information is merchant autht name and transactionKey, logging for now for issue research -->
             <!-- also mask cardCode field <cardCode>1111</cardCode> -->
-            <set field="logReqString" from="pgan ? requestString?.replace(pgan.login, 'XXXX')?.replace(pgan.tranKey, 'XXXX') : requestString"/>
+            <set field="logReqString" from="pgan.login ? requestString?.replace(pgan.login, 'XXXX') : requestString"/>
+            <set field="logReqString" from="pgan.tranKey ? logReqString?.replace(pgan.tranKey, 'XXXX') : logReqString"/>
             <if condition="logReqString.contains('cardCode')"><set field="logReqString" from="logReqString.replaceFirst('cardCode&gt;\\d*&lt;', 'cardCode&gt;XXXX&lt;')"/></if>
             <log message="CimPaymentServices payment ${payment?.paymentId} ${paymentOperationEnumId} requestString: \n${logReqString}"/>
             <!-- do the HTTP request -->
